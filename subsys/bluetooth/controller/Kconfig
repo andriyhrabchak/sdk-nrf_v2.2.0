@@ -1,0 +1,312 @@
+#
+# Copyright (c) 2019 - 2020 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+choice BT_LL_CHOICE
+	prompt "Bluetooth Link Layer Selection"
+	default BT_LL_SOFTDEVICE
+
+config BT_LL_SOFTDEVICE
+	bool "SoftDevice Link Layer"
+	select MPSL
+	select ZERO_LATENCY_IRQS
+	select BT_CTLR_LE_ENC_SUPPORT
+	select BT_CTLR_ECDH_SUPPORT
+	select BT_CTLR_EXT_REJ_IND_SUPPORT
+	select BT_CTLR_PRIVACY_SUPPORT
+	select BT_CTLR_EXT_SCAN_FP_SUPPORT
+	select BT_CTLR_PHY_UPDATE_SUPPORT
+	select BT_CTLR_CHAN_SEL_2_SUPPORT
+	select BT_CTLR_CONN_RSSI_SUPPORT
+	select BT_CTLR_DATA_LEN_UPDATE_SUPPORT
+	select BT_CTLR_ADV_EXT_SUPPORT
+	select BT_CTLR_ADV_PERIODIC_SUPPORT
+	select BT_CTLR_SYNC_PERIODIC_SUPPORT
+	select BT_CTLR_SYNC_TRANSFER_SENDER_SUPPORT
+	select BT_CTLR_PHY_2M_SUPPORT if HAS_HW_NRF_RADIO_BLE_2M
+	select BT_CTLR_PHY_CODED_SUPPORT if HAS_HW_NRF_RADIO_BLE_CODED
+	select BT_HAS_HCI_VS
+	select BT_CTLR_DF_CTE_TX_SUPPORT if HAS_HW_NRF_RADIO_DFE
+	depends on (SOC_SERIES_NRF52X || SOC_NRF5340_CPUNET)
+	help
+	  Use SoftDevice Link Layer implementation.
+
+endchoice
+
+if BT_LL_SOFTDEVICE
+menu "SoftDevice Controller"
+
+choice BT_LL_SOFTDEVICE_BUILD_TYPE
+	prompt "SoftDevice Controller build type"
+	default BT_LL_SOFTDEVICE_BUILD_TYPE_LIB
+
+config BT_LL_SOFTDEVICE_BUILD_TYPE_LIB
+	bool "Use library"
+
+endchoice
+
+# BT_HCI_TX_STACK_SIZE is declared in Zephyr and also here for a second time,
+# for set the valid default size of the HCI Tx stack.
+config BT_HCI_TX_STACK_SIZE
+	# NOTE: This value is derived from other symbols and should only be
+	# changed if required by architecture
+	int
+	default 1536 if BT_LL_SOFTDEVICE
+	help
+	  Stack size needed for executing bt_send with specified driver.
+	  NOTE: This is an advanced setting and should not be changed unless
+	  absolutely necessary
+
+config BT_RX_STACK_SIZE
+	int
+	depends on BT_HCI_HOST || BT_RECV_BLOCKING
+	default 512 if BT_HCI_RAW
+	default 2400 if BT_MESH
+	default 2200 if BT_SETTINGS
+	default 1536 if BT_SMP
+	default 1024
+	range 512 65536 if BT_HCI_RAW
+	range 1100 65536 if BT_MESH
+	range 1024 65536
+	help
+	  Size of the receiving thread stack. This is the context from
+	  which all event callbacks to the application occur. The
+	  default value is sufficient for basic operation, but if the
+	  application needs to do advanced things in its callbacks that
+	  require extra stack space, this value can be increased to
+	  accommodate for that.
+
+# SYSTEM_WORKQUEUE_STACK_SIZE is declared in Zephyr and also here for a second
+# time, because Central side Bluetooth sample needs a different workqueue size
+# when the SoftDevice Controller is used.
+config SYSTEM_WORKQUEUE_STACK_SIZE
+	int
+	default 2048 if BT_LL_SOFTDEVICE
+
+config BT_CTLR_SDC_LLPM
+	bool "Enable Low Latency Packet Mode support"
+	depends on SOC_SERIES_NRF52X
+	help
+	  Low Latency Packet Mode (LLPM) is a Nordic proprietary addition
+	  which lets the application use connection intervals down to 1 ms.
+
+config BT_CTLR_SDC_PERIPHERAL_COUNT
+	int "Number of concurrent peripheral roles"
+	default BT_MAX_CONN if (BT_PERIPHERAL && !BT_CENTRAL)
+	default 1 if BT_PERIPHERAL
+	default 0
+	range 0 BT_MAX_CONN
+	help
+	  Number of concurrent peripheral roles defines how many simultaneous
+	  connections can be created with the device working as a peripheral.
+	  NOTE: the number of central roles is defined as
+	  BT_MAX_CONN - BT_CTLR_SDC_PERIPHERAL_COUNT
+
+config BT_CTLR_SDC_MAX_CONN_EVENT_LEN_DEFAULT
+	int "Default max connection event length [us]"
+	default 7500
+	range 2500 4000000
+	help
+	  The time set aside for connections on every connection interval in
+	  microseconds. The event length and the connection interval are the
+	  primary parameters for setting the throughput of a connection.
+
+config BT_CTLR_SDC_TX_PACKET_COUNT
+	int "Number of Link Layer ACL TX buffers"
+	default 3
+	range 1 20
+	help
+	  The number Link Layer ACL TX packets reserved per connection.
+	  With the default count, the application is able to refill the buffers during a connection event.
+	  That is, non-default values should only be used if reduced throughput is accepted, or when the CPU
+	  utilization is so high that the application is not able to provide data fast enough during connection events.
+
+config BT_CTLR_SDC_RX_PACKET_COUNT
+	int "Number of Link Layer ACL RX buffers"
+	default 2
+	range 1 20
+	help
+	  The number Link Layer ACL RX packets reserved per connection.
+	  With the default count, the application is able to empty the buffers during a connection event.
+	  That is, non-default values should only be used if reduced throughput is accepted, or when the CPU
+	  utilization is so high that the application is not able to read data fast enough during connection events.
+
+config BT_CTLR_SDC_SCAN_BUFFER_COUNT
+	int "Number of buffers available in the scanner"
+	default 3
+	range 2 20
+	help
+	  The buffers are used for processing incoming packets
+	  and storing advertising reports.
+	  It is recommended to support at least three buffers,
+	  otherwise the scan response report will likely not be generated.
+
+config BT_CTLR_SDC_PERIODIC_SYNC_BUFFER_COUNT
+	int "Number of periodic synchronization receive buffers"
+	default 2
+	range 2 20
+	help
+	  The buffers are used for processing incoming packets
+	  and storing periodic advertising reports.
+
+# CONFIG_BT_CTLR_SYNC_PERIODIC_ADV_LIST_SIZE is declared in Zephyr and also
+# here for a second time, to set different range for the SoftDevice Controller.
+config BT_CTLR_SYNC_PERIODIC_ADV_LIST_SIZE
+	int "LE Periodic Advertiser List size"
+	range 0 8
+	default 0
+	depends on BT_CTLR_SYNC_PERIODIC_ADV_LIST
+	help
+	  Set Periodic Advertiser List size, this will be return in the HCI LE
+	  Read Periodic Advertiser List Command.
+
+config BT_CTLR_SDC_RX_PRIO
+	# Hidden option to set the priority of the controller receive thread
+	int
+	default BT_DRIVER_RX_HIGH_PRIO
+
+# CONFIG_BT_CTLR_DF is declared in Zephyr and also here for a second time,
+# to avoid BT_CTLR_DF_SUPPORT dependency.
+config BT_CTLR_DF
+	bool "Enable CTE Transmitter support"
+	help
+	  Enable support for the Bluetooth v5.1 Connectionless CTE Transmitter
+	  and the Connection CTE transmitter features in the controller.
+
+config BT_CTLR_DF_CONN_CTE_RSP
+	bool "Connection CTE Response feature"
+	depends on BT_CTLR_DF_CONN_CTE_TX
+	help
+	  Enable support for Bluetooth v5.1 Connection CTE Response feature
+	  in controller.
+
+# As CONFIG_BT_CTLR_ADV_EXT_PDU_EXTRA_DATA_MEMORY is defined for the Zephyr LL
+# only, and BT_CLTR_DF_ADV_CTE_TX expects it existence, we define it as an empty
+# configuration here.
+config BT_CTLR_ADV_EXT_PDU_EXTRA_DATA_MEMORY
+	bool
+
+choice BT_LL_SOFTDEVICE_VARIANT
+	prompt "SoftDevice Controller variant"
+	default BT_LL_SOFTDEVICE_MULTIROLE if ((BT_OBSERVER && BT_BROADCASTER) || \
+						     BT_CTLR_SDC_LLPM || \
+						     BT_CTLR_ADV_EXT || \
+						     BT_CTLR_PHY_CODED || \
+						     BT_CTLR_ADV_PERIODIC || \
+						     BT_CTLR_DF_CTE_TX || \
+						     MPSL_CX_BT_1WIRE || \
+						     MPSL_CX_BT_3WIRE || \
+						     BT_CTLR_SYNC_PERIODIC || \
+						     SOC_NRF5340_CPUNET)
+	default BT_LL_SOFTDEVICE_CENTRAL if BT_OBSERVER
+	default BT_LL_SOFTDEVICE_PERIPHERAL if BT_BROADCASTER
+	help
+	  Select a SoftDevice Controller variant.
+
+config BT_LL_SOFTDEVICE_PERIPHERAL
+	bool "SoftDevice Controller peripheral library optimized for peripheral role applications"
+	depends on !BT_OBSERVER && !BT_CTLR_SDC_LLPM && !BT_CTLR_ADV_EXT && !BT_CTLR_PHY_CODED
+	help
+	  The peripheral library variant is optimized for simpler applications only
+	  requiring the peripheral role.
+
+config BT_LL_SOFTDEVICE_CENTRAL
+	bool "SoftDevice Controller optimized for central role applications"
+	depends on !BT_BROADCASTER && !BT_CTLR_SDC_LLPM && !BT_CTLR_ADV_EXT && !BT_CTLR_PHY_CODED
+	help
+	  The central library variant is optimized for simpler applications only
+	  requiring the central role.
+
+config BT_LL_SOFTDEVICE_MULTIROLE
+	bool "SoftDevice Controller optimized for multirole and other advanced configurations"
+	help
+	  The multirole library variant is contains all supported features and can be used
+	  for more advanced applications. Using this library may give slightly larger applications.
+	  However, the library is designed in such a way that unused functionality is removed
+	  by the linker.
+
+endchoice
+
+if BT_CTLR_ECDH
+choice BT_CTLR_ECDH_LIB
+	prompt "SoftDevice Controller ECDH library"
+
+config BT_CTLR_ECDH_LIB_OBERON
+	select NRF_OBERON
+	# TODO: Fix ocrypto header not available in these configurations
+	depends on !BUILD_WITH_TFM
+	depends on !OBERON_BACKEND
+	bool "nRF Oberon (SW)"
+
+config BT_CTLR_ECDH_LIB_TINYCRYPT
+	select TINYCRYPT
+	select TINYCRYPT_ECC_DH
+	bool "Tinycrypt"
+
+endchoice
+
+config BT_CTLR_ECDH_STACK_SIZE
+	int
+	default 900 if BT_CTLR_ECDH_LIB_OBERON
+	default 1200 if BT_CTLR_ECDH_LIB_TINYCRYPT
+	help
+	  Size of the ECDH processing thread stack.
+
+config BT_CTLR_ECDH_IN_MPSL_WORK
+	bool "ECDH processing in MPSL workqueue"
+	depends on BT_CTLR_ECDH_LIB_OBERON
+	help
+	  Run the ECDH processing in the MPSL workqueue instead of in a
+	  dedicated pre-emptible thread.
+	  This saves RAM at the cost of delaying MPSL work.
+
+endif # BT_CTLR_ECDH
+
+if (MPSL_CX && BT_BROADCASTER)
+choice BT_CTLR_SDC_CX_ADV_CONFIG
+	default BT_CTLR_SDC_CX_ADV_TRY_CONTINUE_ON_DENIAL if MPSL_CX_BT_3WIRE
+	default BT_CTLR_SDC_CX_ADV_CLOSE_ADV_EVT_ON_DENIAL
+	prompt "SoftDevice Controller advertising coexistance behavior"
+	help
+	  Select the behavior of the controller if the coexistence interface denies a packet during advertising.
+
+config BT_CTLR_SDC_CX_ADV_TRY_CONTINUE_ON_DENIAL
+	depends on MPSL_CX_BT_3WIRE
+	bool "Continue adv event on denial"
+	help
+	  The advertiser will try to send further adverting packets in the same advertising event if one
+	  of the advertising packets is denied by the coexistence interface.
+
+config BT_CTLR_SDC_CX_ADV_CLOSE_ADV_EVT_ON_DENIAL
+	bool "Close adv event on denial"
+	help
+	  The advertiser will close the advertising event if the coexistence interface denies an advertising packet.
+endchoice
+endif # MPSL_CX && BT_BROADCASTER
+
+config BT_CTLR_LE_POWER_CONTROL
+	bool "LE Power Control [EXPERIMENTAL]"
+	select EXPERIMENTAL
+	help
+	  Enable support for LE Power Control feature that defined in the Bluetooth
+	  Core specification, Version 5.3 | Vol 6, Part B, Section 4.6.31.
+
+config BT_UNINIT_MPSL_ON_DISABLE
+	bool "Uninitializes MPSL on BT disable"
+	depends on MPSL_DYNAMIC_INTERRUPTS
+	help
+	  This option unitializes MPSL on BT disable. HCI driver close calls
+	  mpsl_lib_uninit, which releases all peripherals and allows the user to
+	  override any interrupt handlers used by MPSL.
+
+config BT_CTLR_SYNC_TRANSFER_SENDER
+	bool "Periodic Advertising Sync Transfer - Sender [EXPERIMENTAL]"
+	select EXPERIMENTAL
+	help
+	  Enable support for sending Periodic Advertising Sync Transfer as
+	  defined in the Bluetooth Core Specification, Version 5.3 | Vol 6,
+	  Part B, Section 4.6.23.
+endmenu
+endif  # BT_LL_SOFTDEVICE

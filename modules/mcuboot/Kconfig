@@ -1,0 +1,115 @@
+menu "MCUboot"
+
+config BOOT_SIGNATURE_KEY_FILE
+	string "MCUBoot PEM key file"
+	depends on !MCUBOOT_BUILD_STRATEGY_FROM_SOURCE
+	help
+	  Absolute path to PEM key file containing the private key corresponding
+	  to the public key included in MCUBoot. This will be used to sign the
+	  image so that it can be verified by MCUBoot. Since MCUBoot is not
+	  built from source, it is not possible for the build system to deduce
+	  what key was used when compiling it. Hence, it is required that the
+	  key is passed to the build system through this option.
+
+config SIGN_IMAGES
+	bool "Sign images for MCUBoot"
+	default y
+	imply BUILD_OUTPUT_META
+	depends on MCUBOOT_BUILD_STRATEGY_FROM_SOURCE \
+		   || BOOT_SIGNATURE_KEY_FILE != ""
+	help
+	  Sign images for MCUBoot as integrated part of the build stages using
+	  the private key.
+
+if BOOTLOADER_MCUBOOT
+
+config BOOT_BUILD_DIRECT_XIP_VARIANT
+	bool "Build DIRECT_XIP variant"
+	help
+	  Build a variant of the 'app' image which can be used for DIRECT_XIP.
+
+# The name of this configuration needs to match the requirements set by the
+# script `partition_manager.py`. See `pm.yml` in the application directory
+# of MCUBoot.
+module=MCUBOOT
+source "${ZEPHYR_BASE}/../nrf/subsys/partition_manager/Kconfig.template.build_strategy"
+
+config MCUBOOT_IMAGE_VERSION
+	string "Image version"
+	default "0.0.0+0"
+	help
+	  Value to be passed as 'version' argument to 'imgtool.py' when
+	  creating a signed image.
+	  Format: maj.min.rev+build, 'min', 'rev' and 'build' parts are optional
+	  This is used to enforce downgrade protection when Software based
+	  downgrade prevention (MCUBOOT_DOWNGRADE_PREVENTION) is enabled
+
+	  Note that the optional 'build' number specified after the + character
+	  is ignored when evaluating the version. An existing application image
+	  with version 0.1.2+3 can be overwritten by an uploaded image with
+	  0.1.2+2, but not by one with 0.1.1+2.
+
+# HACK: NCS temphack to keep our imgtool integration working now that
+# there is no CONFIG_DT_* CMake namespace anymore. Use Zephyr
+# kconfigfunctions to thread the flash write block size through
+# Kconfig so it can be accessed from CMake. Needs a better solution.
+DT_ZEPHYR_FLASH := zephyr,flash
+DT_CHOSEN_ZEPHYR_FLASH := $(dt_chosen_path,$(DT_ZEPHYR_FLASH))
+config MCUBOOT_FLASH_WRITE_BLOCK_SIZE
+	int
+	default $(dt_node_int_prop_int,$(DT_CHOSEN_ZEPHYR_FLASH),write-block-size)
+
+endif # BOOTLOADER_MCUBOOT
+
+config DT_FLASH_WRITE_BLOCK_SIZE
+	int
+	default $(dt_node_int_prop_int,$(DT_CHOSEN_ZEPHYR_FLASH),write-block-size)
+
+config MCUBOOT_USB_SUPPORT
+	bool
+	default y if "$(dt_nodelabel_enabled,zephyr_udc0)"
+
+config USE_NRF53_MULTI_IMAGE_WITHOUT_UPGRADE_ONLY
+	bool
+	help
+	  Enabling this option allows you to use NRF53_MULTI_IMAGE update
+	  without having BOOT_UPGRADE_ONLY enabled, allowing you to use
+	  different swapping methods. This will however give you the potential
+	  of bricking the network core upon reverts.
+
+config DFU_MULTI_IMAGE_PACKAGE_BUILD
+	bool "Build DFU Multi Image package"
+	depends on BOOTLOADER_MCUBOOT
+	help
+	  Build DFU Multi Image package that contains a manifest file followed by
+	  selected update images.
+
+if DFU_MULTI_IMAGE_PACKAGE_BUILD
+
+config DFU_MULTI_IMAGE_PACKAGE_APP
+	bool "Include Application Core image in DFU Multi Image package"
+	default y
+
+config DFU_MULTI_IMAGE_PACKAGE_NET
+	bool "Include Network Core image in DFU Multi Image package"
+	depends on NRF53_UPGRADE_NETWORK_CORE
+	default y
+
+config DFU_MULTI_IMAGE_PACKAGE_MCUBOOT
+	bool "Include MCUboot image in DFU Multi Image package"
+	depends on BUILD_S1_VARIANT
+	# Currently simultaneous application and MCUboot updates are unsupported
+	depends on !DFU_MULTI_IMAGE_PACKAGE_APP && !DFU_MULTI_IMAGE_PACKAGE_NET
+
+endif # DFU_MULTI_IMAGE_PACKAGE_BUILD
+
+config ADD_MCUBOOT_MEDIATE_SIM_FLASH_DTS
+	bool "DTS overlay of the sim-flash intermediary for upgrading NET core"
+	depends on BOOTLOADER_MCUBOOT
+	help
+	  Add DTS overlay which defines the flash simulator device which is emulating
+	  the network core primary slot. This slot is required either to allow
+	  multi image update of the network core or to allow serial recovery of
+	  the network core.
+
+endmenu

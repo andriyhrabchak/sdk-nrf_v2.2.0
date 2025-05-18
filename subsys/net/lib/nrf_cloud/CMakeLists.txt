@@ -1,0 +1,39 @@
+#
+# Copyright (c) 2019 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+zephyr_library()
+zephyr_library_sources(
+	src/nrf_cloud_codec.c
+	src/nrf_cloud_mem.c
+	src/nrf_cloud_client_id.c
+	src/nrf_cloud_fota_common.c)
+zephyr_library_sources_ifdef(
+	CONFIG_MODEM_JWT
+	src/nrf_cloud_jwt.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_MQTT
+	src/nrf_cloud.c
+	src/nrf_cloud_fsm.c
+	src/nrf_cloud_transport.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_AGPS
+	src/nrf_cloud_agps.c
+	src/nrf_cloud_agps_utils.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_PGPS
+	src/nrf_cloud_agps.c
+	src/nrf_cloud_agps_utils.c
+	src/nrf_cloud_pgps.c
+	src/nrf_cloud_pgps_utils.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_LOCATION
+	src/nrf_cloud_location.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_FOTA
+	src/nrf_cloud_fota.c)
+zephyr_library_sources_ifdef(
+	CONFIG_NRF_CLOUD_REST
+	src/nrf_cloud_rest.c)
+zephyr_include_directories(./include)

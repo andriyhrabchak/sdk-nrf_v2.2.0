@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2021 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+mainmenu "Matter weather station application"
+
+config AVERAGE_CURRENT_CONSUMPTION
+	int "Average device current consumption in microamperes"
+	default 0
+	help
+	  The predicted average current consumption of the Matter weather station
+	  device, used to estimate the remaining battery time.
+
+if CHIP_FACTORY_DATA
+
+# Overwrite the Fprotect block size to fit the size of the factory data partition.
+# See lib/fprotect/Kconfig to get full description of this config.
+config FPROTECT_BLOCK_SIZE
+	hex
+	default 0x1000
+
+endif
+
+source "Kconfig.zephyr"

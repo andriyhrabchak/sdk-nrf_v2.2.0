@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2019 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+if BT_MESH
+
+menu "Bluetooth mesh"
+
+rsource "Kconfig.models"
+rsource "Kconfig.dk_prov"
+rsource "shell/Kconfig"
+rsource "Kconfig.rpl"
+
+endmenu
+
+endif # BT_MESH
