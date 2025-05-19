@@ -69,7 +69,7 @@ manifest:
         #
         # Please keep this list sorted alphabetically.
         name-allowlist:
-          # - TraceRecorderSource
+          - TraceRecorderSource
           # - canopennode
           - chre
           - cmsis
