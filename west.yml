@@ -71,35 +71,35 @@ manifest:
         name-allowlist:
           # - TraceRecorderSource
           # - canopennode
-          # - chre
+          - chre
           - cmsis
-          # - edtt
+          - edtt
           - fatfs
-          # - fff
+          - fff
           - hal_nordic
           # - hal_st # required for ST sensors (unrealted to STM32 MCUs)
           # - hal_wurthelektronik
-          # - liblc3
-          # - libmetal
+          - liblc3
+          - libmetal
           - littlefs
           # - loramac-node
           # - lvgl
-          # - lz4
+          - lz4
           - mbedtls
-          # - mipi-sys-t
-          # - nanopb
+          - mipi-sys-t
+          - nanopb
           - net-tools
           - nrf_hw_models
           # - open-amp
-          # - picolibc
-          # - psa-arch-tests
-          # - segger
-          # - tinycbor
-          # - tinycrypt
+          - picolibc
+          - psa-arch-tests
+          - segger
+          - tinycbor
+          - tinycrypt
           - tf-m-tests
           # - uoscore-uedhoc
-          # - zcbor
-          # - zscilib
+          - zcbor
+          - zscilib
 
     # NCS repositories.
     #
