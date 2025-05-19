@@ -90,14 +90,14 @@ manifest:
           - nanopb
           - net-tools
           - nrf_hw_models
-          # - open-amp
+          - open-amp
           - picolibc
           - psa-arch-tests
           - segger
           - tinycbor
           - tinycrypt
           - tf-m-tests
-          # - uoscore-uedhoc
+          - uoscore-uedhoc
           - zcbor
           - zscilib
 
