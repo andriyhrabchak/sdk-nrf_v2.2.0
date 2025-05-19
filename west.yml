@@ -70,19 +70,19 @@ manifest:
         # Please keep this list sorted alphabetically.
         name-allowlist:
           - TraceRecorderSource
-          # - canopennode
+          - canopennode
           - chre
           - cmsis
           - edtt
           - fatfs
           - fff
           - hal_nordic
-          # - hal_st # required for ST sensors (unrealted to STM32 MCUs)
-          # - hal_wurthelektronik
+          - hal_st # required for ST sensors (unrealted to STM32 MCUs)
+          - hal_wurthelektronik
           - liblc3
           - libmetal
           - littlefs
-          # - loramac-node
+          - loramac-node
           # - lvgl
           - lz4
           - mbedtls
@@ -151,44 +151,44 @@ manifest:
       repo-path: sdk-cjson
       path: modules/lib/cjson
       revision: c6af068b7f05207b28d68880740e4b9ec1e4b50a
-    # - name: homekit
-    #   repo-path: sdk-homekit
-    #   revision: v2.2.0
-    #   groups:
-    #     - homekit
-    # - name: find-my
-    #   repo-path: sdk-find-my
-    #   revision: v2.2.0
-    #   groups:
-    #     - find-my
-    # - name: azure-sdk-for-c
-    #   repo-path: azure-sdk-for-c
-    #   path: modules/lib/azure-sdk-for-c
-    #   revision: 308c171cb4b5eed266649012a68406487ec81fb2
-    # # Other third-party repositories.
-    # - name: cmock
-    #   path: test/cmock
-    #   submodules: true
-    #   revision: f65066f15d8248e6dcb778efb8739904a4512087
-    #   remote: throwtheswitch
-    # - name: memfault-firmware-sdk
-    #   path: modules/lib/memfault-firmware-sdk
-    #   revision: 0.35.0
-    #   remote: memfault
-    # - name: cirrus
-    #   repo-path: sdk-mcu-drivers
-    #   path: modules/hal/cirrus-logic
-    #   revision: 9f6b3812237fbb0d4157ba3584c13f1644fcbe3a
-    # - name: openthread
-    #   repo-path: sdk-openthread
-    #   path: modules/lib/openthread
-    #   revision: 0759de4fc52c8935b90e7f1a79d85148b66dc56e
-    # - name: ant
-    #   repo-path: sdk-ant
-    #   revision: 8f6e2b0470d11b5c1a97c92df35eb1350e84c5f8
-    #   remote: ant-nrfconnect
-    #   groups:
-    #     - ant
+    - name: homekit
+      repo-path: sdk-homekit
+      revision: v2.2.0
+      groups:
+        - homekit
+    - name: find-my
+      repo-path: sdk-find-my
+      revision: v2.2.0
+      groups:
+        - find-my
+    - name: azure-sdk-for-c
+      repo-path: azure-sdk-for-c
+      path: modules/lib/azure-sdk-for-c
+      revision: 308c171cb4b5eed266649012a68406487ec81fb2
+    # Other third-party repositories.
+    - name: cmock
+      path: test/cmock
+      submodules: true
+      revision: f65066f15d8248e6dcb778efb8739904a4512087
+      remote: throwtheswitch
+    - name: memfault-firmware-sdk
+      path: modules/lib/memfault-firmware-sdk
+      revision: 0.35.0
+      remote: memfault
+    - name: cirrus
+      repo-path: sdk-mcu-drivers
+      path: modules/hal/cirrus-logic
+      revision: 9f6b3812237fbb0d4157ba3584c13f1644fcbe3a
+    - name: openthread
+      repo-path: sdk-openthread
+      path: modules/lib/openthread
+      revision: 0759de4fc52c8935b90e7f1a79d85148b66dc56e
+    - name: ant
+      repo-path: sdk-ant
+      revision: 8f6e2b0470d11b5c1a97c92df35eb1350e84c5f8
+      remote: ant-nrfconnect
+      groups:
+        - ant
 
   # West-related configuration for the nrf repository.
   self:
