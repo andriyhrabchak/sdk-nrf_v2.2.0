@@ -55,7 +55,7 @@ manifest:
     - name: zephyr
       remote: andriyhrabchak
       repo-path: sdk-zephyr
-      revision: v3.2.99-ncs1
+      revision: fix-syslog-net
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
